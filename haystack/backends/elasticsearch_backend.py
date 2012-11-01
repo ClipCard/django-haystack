@@ -118,12 +118,11 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                 'properties': field_mapping
             }
         }
-
         if current_mapping != self.existing_mapping:
             try:
                 # Make sure the index is there first.
                 self.conn.create_index(self.index_name, self.DEFAULT_SETTINGS)
-                self.conn.put_mapping('modelresult', current_mapping, index=self.index_name)
+                self.conn.put_mapping(self.index_name, 'modelresult', current_mapping)
                 self.existing_mapping = current_mapping
             except Exception:
                 if not self.silently_fail:
@@ -433,16 +432,13 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
 
             ((min_lat, min_lng), (max_lat, max_lng)) = generate_bounding_box(intersect['point_1'], intersect['point_2'])
             intersect_filter = {
-                "geo_bounding_box": {
+                "geo_shape": {
                     intersect['field']: {
-                        "top_left": {
-                            "lat": max_lat,
-                            "lon": max_lng
+                        "shape": {
+                            "type": "envelope",
+                            "coordinates": [[max_lat, max_lng], [min_lat, min_lng]]
                         },
-                        "bottom_right": {
-                            "lat": min_lat,
-                            "lon": min_lng
-                        }
+                        "relation": "intersects"
                     }
                 },
             }
