@@ -232,7 +232,7 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                             fields='', highlight=False, facets=None,
                             date_facets=None, query_facets=None,
                             narrow_queries=None, spelling_query=None,
-                            within=None, dwithin=None, distance_point=None,
+                            intersect=None, within=None, dwithin=None, distance_point=None,
                             models=None, limit_to_registered_models=None,
                             result_class=None):
         index = haystack.connections[self.connection_alias].get_unified_index()
@@ -427,6 +427,37 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                 kwargs['query']['filtered']['filter'] = compound_filter
             else:
                 kwargs['query']['filtered']['filter'] = within_filter
+
+        if intersect is not None:
+            from haystack.utils.geo import generate_bounding_box
+
+            ((min_lat, min_lng), (max_lat, max_lng)) = generate_bounding_box(intersect['point_1'], intersect['point_2'])
+            intersect_filter = {
+                "geo_bounding_box": {
+                    intersect['field']: {
+                        "top_left": {
+                            "lat": max_lat,
+                            "lon": max_lng
+                        },
+                        "bottom_right": {
+                            "lat": min_lat,
+                            "lon": min_lng
+                        }
+                    }
+                },
+            }
+            kwargs['query'].setdefault('filtered', {})
+            kwargs['query']['filtered'].setdefault('filter', {})
+            if kwargs['query']['filtered']['filter']:
+                compound_filter = {
+                    "and": [
+                        kwargs['query']['filtered']['filter'],
+                        intersect_filter,
+                    ]
+                }
+                kwargs['query']['filtered']['filter'] = compound_filter
+            else:
+                kwargs['query']['filtered']['filter'] = intersect_filter
 
         if dwithin is not None:
             lng, lat = dwithin['point'].get_coords()
@@ -624,6 +655,8 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                 field_mapping['analyzer'] = "edgengram_analyzer"
             elif field_class.field_type == 'location':
                 field_mapping['type'] = 'geo_point'
+            elif field_class.field_type == 'geometry':
+                field_mapping['type'] = 'geo_shape'
 
             # The docs claim nothing is needed for multivalue...
             # if field_class.is_multivalued:
@@ -822,6 +855,9 @@ class ElasticsearchSearchQuery(BaseSearchQuery):
 
         if self.query_facets:
             search_kwargs['query_facets'] = self.query_facets
+
+        if self.intersect:
+            search_kwargs['intersect'] = self.intersect
 
         if self.within:
             search_kwargs['within'] = self.within

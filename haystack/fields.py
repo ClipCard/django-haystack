@@ -196,6 +196,23 @@ class LocationField(SearchField):
         return value
 
 
+class GeometryField(SearchField):
+    field_type = 'geometry'
+
+    def prepare(self, obj):
+        value = super(GeometryField, self).prepare(obj)
+
+        if value is None:
+            return None
+        return eval(value.geojson.lower())  # TODO: NO NO NO NO NO NO
+
+    def convert(self, value):
+        from django.contrib.gis.geos import GEOSGeometry
+        value = GEOSGeometry(str(value).replace('u', ''))
+
+        return value
+
+
 class NgramField(CharField):
     field_type = 'ngram'
 

@@ -122,7 +122,7 @@ class BaseSearchBackend(object):
                             fields='', highlight=False, facets=None,
                             date_facets=None, query_facets=None,
                             narrow_queries=None, spelling_query=None,
-                            within=None, dwithin=None, distance_point=None,
+                            intersect=None, within=None, dwithin=None, distance_point=None,
                             models=None, limit_to_registered_models=None,
                             result_class=None):
         # A convenience method most backends should include in order to make
@@ -302,6 +302,7 @@ class BaseSearchQuery(object):
         self.fields = []
         # Geospatial-related information
         self.within = {}
+        self.intersect = {}
         self.dwithin = {}
         self.distance_point = {}
         # Internal.
@@ -373,6 +374,9 @@ class BaseSearchQuery(object):
 
         if self.within:
             kwargs['within'] = self.within
+
+        if self.intersect:
+            kwargs['intersect'] = self.intersect
 
         if self.dwithin:
             kwargs['dwithin'] = self.dwithin
@@ -706,6 +710,15 @@ class BaseSearchQuery(object):
             'point_2': ensure_point(point_2),
         }
 
+    def add_intersect(self, field, point_1, point_2):
+        """Adds bounding box parameters to search query."""
+        from haystack.utils.geo import ensure_point
+        self.intersect = {
+            'field': field,
+            'point_1': ensure_point(point_1),
+            'point_2': ensure_point(point_2),
+        }
+
     def add_dwithin(self, field, point, distance):
         """Adds radius-based parameters to search query."""
         from haystack.utils.geo import ensure_point, ensure_distance
@@ -833,6 +846,7 @@ class BaseSearchQuery(object):
         clone.end_offset = self.end_offset
         clone.result_class = self.result_class
         clone.within = self.within.copy()
+        clone.intersect = self.intersect.copy()
         clone.dwithin = self.dwithin.copy()
         clone.distance_point = self.distance_point.copy()
         clone._raw_query = self._raw_query

@@ -359,6 +359,12 @@ class SearchQuerySet(object):
         clone.query.add_field_facet(field)
         return clone
 
+    def intersect(self, field, point_1, point_2):
+        """Spatial: Adds a bounding box search to the query."""
+        clone = self._clone()
+        clone.query.add_intersect(field, point_1, point_2)
+        return clone
+
     def within(self, field, point_1, point_2):
         """Spatial: Adds a bounding box search to the query."""
         clone = self._clone()
