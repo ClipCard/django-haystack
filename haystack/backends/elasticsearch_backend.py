@@ -430,13 +430,14 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
         if intersect is not None:
             from haystack.utils.geo import generate_bounding_box
 
+            # upper left, lower right
             ((min_lat, min_lng), (max_lat, max_lng)) = generate_bounding_box(intersect['point_1'], intersect['point_2'])
             intersect_filter = {
                 "geo_shape": {
                     intersect['field']: {
                         "shape": {
                             "type": "envelope",
-                            "coordinates": [[max_lat, max_lng], [min_lat, min_lng]]
+                            "coordinates": [[min_lng, max_lat], [max_lng, min_lat]]
                         },
                         "relation": "intersects"
                     }

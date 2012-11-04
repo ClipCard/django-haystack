@@ -1,4 +1,5 @@
 import re
+import json
 from django.utils import datetime_safe
 from django.template import loader, Context
 from haystack.exceptions import SearchFieldError
@@ -204,7 +205,7 @@ class GeometryField(SearchField):
 
         if value is None:
             return None
-        return eval(value.geojson.lower())  # TODO: NO NO NO NO NO NO
+        return json.loads(value.geojson.lower())
 
     def convert(self, value):
         from django.contrib.gis.geos import GEOSGeometry
