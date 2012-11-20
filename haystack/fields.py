@@ -378,7 +378,7 @@ class MultiValueField(SearchField):
 
 
 class DictionaryField(SearchField):
-    field_type = 'string'
+    field_type = 'object'
 
     def __init__(self, **kwargs):
         if kwargs.get('facet_class') is None:

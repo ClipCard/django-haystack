@@ -654,6 +654,8 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                 field_mapping['type'] = 'geo_point'
             elif field_class.field_type == 'geometry':
                 field_mapping['type'] = 'geo_shape'
+            elif field_class.field_type == 'object':
+                field_mapping['type'] = 'object'
 
             # The docs claim nothing is needed for multivalue...
             # if field_class.is_multivalued:
