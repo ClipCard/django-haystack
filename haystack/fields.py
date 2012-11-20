@@ -377,6 +377,29 @@ class MultiValueField(SearchField):
         return list(value)
 
 
+class DictionaryField(SearchField):
+    field_type = 'string'
+
+    def __init__(self, **kwargs):
+        if kwargs.get('facet_class') is None:
+            kwargs['facet_class'] = FacetDictionaryField
+
+        if kwargs.get('use_template') is True:
+            raise SearchFieldError("'%s' fields can not use templates to prepare their data." % self.__class__.__name__)
+
+        super(DictionaryField, self).__init__(**kwargs)
+        self.is_multivalued = True
+
+    def prepare(self, obj):
+        return self.convert(super(DictionaryField, self).prepare(obj))
+
+    def convert(self, value):
+        if value is None:
+            return None
+
+        return value
+
+
 class FacetField(SearchField):
     """
     ``FacetField`` is slightly different than the other fields because it can
@@ -449,4 +472,7 @@ class FacetDateTimeField(FacetField, DateTimeField):
 
 
 class FacetMultiValueField(FacetField, MultiValueField):
+    pass
+
+class FacetDictionaryField(FacetField, DictionaryField):
     pass
