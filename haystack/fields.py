@@ -209,7 +209,7 @@ class GeometryField(SearchField):
 
     def convert(self, value):
         from django.contrib.gis.geos import GEOSGeometry
-        value = GEOSGeometry(str(value).replace('u', ''))
+        value = GEOSGeometry(json.dumps(value))
 
         return value
 
