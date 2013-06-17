@@ -1,3 +1,4 @@
+# coding: utf-8
 from datetime import date
 from django.conf import settings
 from django.test import TestCase
@@ -71,6 +72,11 @@ class SimpleSearchBackendTestCase(TestCase):
         # Ensure that swapping the ``result_class`` works.
         self.assertTrue(isinstance(self.backend.search(u'index document', result_class=MockSearchResult)['results'][0], MockSearchResult))
 
+    def test_filter_models(self):
+        self.backend.update(self.index, self.sample_objs)
+        self.assertEqual(self.backend.search(u'*', models=set([]))['hits'], 24)
+        self.assertEqual(self.backend.search(u'*', models=set([MockModel]))['hits'], 23)
+
     def test_more_like_this(self):
         self.backend.update(self.index, self.sample_objs)
         self.assertEqual(self.backend.search(u'*')['hits'], 24)
@@ -120,6 +126,9 @@ class LiveSimpleSearchQuerySetTestCase(TestCase):
         self.assertTrue(len(self.sqs.filter(text='index')) > 0)
         self.assertTrue(len(self.sqs.exclude(name='daniel')) > 0)
         self.assertTrue(len(self.sqs.order_by('-pub_date')) > 0)
+
+    def test_general_queries_unicode(self):
+        self.assertEqual(len(self.sqs.auto_query(u'Привет')), 0)
 
     def test_more_like_this(self):
         # MLT shouldn't be horribly broken. This used to throw an exception.
