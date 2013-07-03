@@ -457,8 +457,7 @@ class ElasticsearchSearchBackend(BaseSearchBackend):
                         "shape": {
                             "type": "envelope",
                             "coordinates": [[min_lng, max_lat], [max_lng, min_lat]]
-                        },
-                        "relation": "intersects"
+                        }
                     }
                 },
             }
