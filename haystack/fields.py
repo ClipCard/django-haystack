@@ -205,12 +205,15 @@ class GeometryField(SearchField):
 
         if value is None:
             return None
-        return json.loads(value.geojson.lower())
+        geom = json.loads(value.geojson.lower())
+        geom['srid'] = value.srid
+        return geom
 
     def convert(self, value):
         from django.contrib.gis.geos import GEOSGeometry
+        srid = value.get('srid')
         value = GEOSGeometry(json.dumps(value))
-
+        value.srid = srid
         return value
 
 
